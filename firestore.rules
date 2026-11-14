@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function authenticated() { return request.auth != null; }
+    function isOpen(drawId) {
+      return get(/databases/$(database)/documents/sorteos/$(drawId)).data.estado == 'abierto';
+    }
+    function inRange(n) { return n is int && n >= 1 && n <= 45; }
+    function validNumbers(n) {
+      return n is list && n.size() == 6
+        && inRange(n[0]) && inRange(n[1]) && inRange(n[2])
+        && inRange(n[3]) && inRange(n[4]) && inRange(n[5])
+        && n[0] != n[1] && n[0] != n[2] && n[0] != n[3]
+        && n[0] != n[4] && n[0] != n[5]
+        && n[1] != n[2] && n[1] != n[3] && n[1] != n[4]
+        && n[1] != n[5] && n[2] != n[3] && n[2] != n[4]
+        && n[2] != n[5] && n[3] != n[4] && n[3] != n[5]
+        && n[4] != n[5];
+    }
+    match /sorteos/{drawId} {
+      allow read: if authenticated();
+      allow write: if false; // Administrador publica usando Firebase Console.
+      match /bolillas/{ballId} {
+        allow read: if authenticated();
+        allow write: if false;
+      }
+      match /jugadas/{uid} {
+        allow read: if authenticated() && request.auth.uid == uid;
+        allow create: if authenticated() && request.auth.uid == uid && isOpen(drawId)
+          && request.resource.data.keys().hasOnly(['sorteoId','uid','numeros'])
+          && request.resource.data.sorteoId == drawId
+          && request.resource.data.uid == uid
+          && validNumbers(request.resource.data.numeros);
+        allow update, delete: if false;
+      }
+    }
+  }
+}
