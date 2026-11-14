@@ -86,3 +86,16 @@ git push -u origin main
 ```
 
 Si usas un proyecto nuevo, revisa los datos de autor en el README y **nunca publiques credenciales reales**.
+
+## Tecnologías utilizadas
+
+- Kotlin
+- Jetpack Compose
+- Firebase Authentication
+- Cloud Firestore
+
+## Funcionalidades principales
+
+- Registro e inicio de sesión
+- Registro de jugadas
+- Seguimiento de sorteos en tiempo real
